@@ -2,10 +2,10 @@ import jwt from 'jsonwebtoken'
 import "dotenv/config"
 
 export function generateToken(userId, role){
-    let payload = {
-        userId: userId,
-        userRole: role
-    }
+    const payload = {
+        id: userId,
+        role: role
+    };
     return jwt.sign(payload, process.env.SECRET_KEY)
 }
 

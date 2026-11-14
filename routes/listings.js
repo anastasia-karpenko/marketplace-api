@@ -65,6 +65,12 @@ listingsRouter.patch('/:id', authenticate, async (req, res) => {
         where: { id },
     });
 
+    if (!listing) {
+    return res.status(404).json({
+        message: 'Объявление не найдено',
+    });
+    }
+
     // редактировать объявление может владелец или модератор
     const isOwner = req.user.id == listing.ownerId
     const isModerator = req.user.role == 'MODERATOR'

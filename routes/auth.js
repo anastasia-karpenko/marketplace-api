@@ -36,7 +36,7 @@ authRouter.post('/register', async (req, res) => {
 
     res.status(201).json(user);
 })
-// {email: fsdff, password: 'wrgw'}
+
 authRouter.post('/login', async (req, res) => {
     const { email, password } = req.body;
     const user = await client.user.findUnique({
@@ -45,13 +45,13 @@ authRouter.post('/login', async (req, res) => {
         }
     })
     if (!user){
-        res.status(401).json({
+        return res.status(401).json({
             error: 'Неверный email'
         })
     }
     const isValidPassword = await bcrypt.compare(password, user.password)
     if (!isValidPassword){
-        res.status(401).json({
+        return res.status(401).json({
             error: 'Неверный пароль'
         })
     }
@@ -70,24 +70,3 @@ authRouter.post('/login', async (req, res) => {
 authRouter.get('/me', async (req, res) => {
     
 })
-
-// jwt (json web token) - формат токена, который используется для передачи
-// данных между сторонами. для проверки токена используется подпись. 
-
-// sign() - позволяет сгенерировать токен
-// verify() - позволяет проверить подпись токена и срок действия
-
-// http://localhost:3000/api/auth/login
-
-// eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NSwiaWF0IjoxNzk0NDg0OTQ2fQ.rPA9zXRg6wfmFZxh82mgr4K7Oe_DHPsoyOce8bD0s-Q
-
-// алгоритм работы jwt:
-
-// 1. пользователь вводит логин и пароль
-// 2. клиент(браузер) отправляет POST запрос на сервер
-// 3. сервер проверяет данные, если все верно - генерирует токен
-// 4. сервер отправляет токен клиенту
-// 5. при последующих запросах клиент передает токен в 
-// заголовке запроса. название заголовка - authorization
-// 6. сервер проверяет подпись и срок действия токена
-// 7. либо дает доступ к сайте, либо выдает ошибку
