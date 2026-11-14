@@ -1,5 +1,6 @@
 import express from 'express'
 import { client } from '../db';
+import { authenticate, authorize} from '../middlewares';
 
 export const listingsRouter = express.Router()
 
@@ -41,7 +42,7 @@ listingsRouter.get('/:id', async (req, res) => {
     res.json(listing);
 })
 
-listingsRouter.post('/', async (req, res) => {
+listingsRouter.post('/', authenticate, async (req, res) => {
     const { title, description, price, category } = req.body;
 
     const listing = await client.listing.create({
@@ -50,24 +51,39 @@ listingsRouter.post('/', async (req, res) => {
             description,
             price: Number(price),
             category,
-            ownerId: Number(ownerId),
+            ownerId: req.user.id
         },
     });
 
     res.status(201).json(listing);
 })
 
-listingsRouter.patch('/:id', async (req, res) => {
+listingsRouter.patch('/:id', authenticate, async (req, res) => {
     const id = Number(req.params.id);
-    const listing = await client.listing.update({
+    // находим объявление в БД
+    const listing = await client.listing.findUnique({
+        where: { id },
+    });
+
+    // редактировать объявление может владелец или модератор
+    const isOwner = req.user.id == listing.ownerId
+    const isModerator = req.user.role == 'MODERATOR'
+
+    if (!isModerator && !isOwner){
+        res.status(403).json({
+            error: 'Недостаточно прав'
+        })
+    }
+    else{
+        const updateListing = await client.listing.update({
         where: { id },
         data: req.body,
     });
-
-    res.json(listing);
+        res.json(updateListing);
+    }
 })
 
-listingsRouter.delete('/:id', async (req, res) => {
+listingsRouter.delete('/:id', authenticate, authorize('MODERATOR', 'ADMIN'), async (req, res) => {
     const id = Number(req.params.id);
     await client.listing.delete({
         where: { id },
